@@ -81,14 +81,14 @@ function ComposerModal({
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[10020] bg-black/50 backdrop-blur-[4px]" onClick={onClose}>
       <div
         className="flex h-full items-end justify-center p-3 sm:items-center"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="card-surface max-h-[92dvh] w-full max-w-md overflow-hidden rounded-[34px] shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+        <div className="relative isolate max-h-[92dvh] w-full max-w-md overflow-hidden rounded-[34px] border border-black/10 bg-[var(--openarm-surface-strong)] shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
           {/* Modal header */}
-          <div className="flex items-start justify-between gap-4 border-b border-[var(--openarm-border)] px-5 py-5">
+          <div className="relative z-[1] flex items-start justify-between gap-4 border-b border-[var(--openarm-border)] bg-[var(--openarm-surface-strong)] px-5 py-5">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--openarm-muted)]">OpenArm</p>
               <h3 className="mt-1.5 text-2xl font-black text-[var(--openarm-text)]">{t("requester.modalTitle")}</h3>
@@ -105,7 +105,7 @@ function ComposerModal({
           </div>
 
           {/* Modal body */}
-          <div className="flex max-h-[calc(92dvh-110px)] flex-col gap-3 overflow-y-auto px-5 py-4">
+          <div className="relative z-[1] flex max-h-[calc(92dvh-110px)] flex-col gap-3 overflow-y-auto bg-[var(--openarm-surface-strong)] px-5 py-4">
             <div className="flex flex-col gap-1">
               <label className="form-label">{t("requester.shortTitle") || "Short title"}</label>
               <input
