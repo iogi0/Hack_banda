@@ -6,23 +6,38 @@ export interface UserCoords {
   accuracy: "gps" | "ip" | "default";
 }
 
+let cachedLocation: UserCoords | null = null;
+let gpsRetryAfter = 0;
+
+const GPS_RETRY_COOLDOWN_MS = 60_000;
+const LOCATION_CACHE_MS = 20_000;
+let cachedAt = 0;
+
 // Browser-side: GPS first, IP second, Košice fallback last
 export async function getUserLocation(): Promise<UserCoords> {
   if (typeof window === "undefined") {
     return { ...KOSICE_DEFAULT, accuracy: "default" };
   }
 
-  if ("geolocation" in navigator) {
+  const now = Date.now();
+  if (cachedLocation && now - cachedAt < LOCATION_CACHE_MS) {
+    return cachedLocation;
+  }
+
+  if ("geolocation" in navigator && now >= gpsRetryAfter) {
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          timeout: 6000,
-          enableHighAccuracy: true,
+          timeout: 4500,
+          maximumAge: LOCATION_CACHE_MS,
+          enableHighAccuracy: false,
         });
       });
-      return { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: "gps" };
+      cachedLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: "gps" };
+      cachedAt = now;
+      return cachedLocation;
     } catch {
-      /* fall through to IP */
+      gpsRetryAfter = now + GPS_RETRY_COOLDOWN_MS;
     }
   }
 
@@ -32,18 +47,22 @@ export async function getUserLocation(): Promise<UserCoords> {
       const data = await res.json();
       const location = data.location;
       if (typeof location?.lat === "number" && typeof location?.lng === "number") {
-        return {
+        cachedLocation = {
           lat: location.lat,
           lng: location.lng,
           accuracy: (location.accuracy as UserCoords["accuracy"]) ?? "ip",
         };
+        cachedAt = now;
+        return cachedLocation;
       }
     }
   } catch {
     /* fall through */
   }
 
-  return { lat: KOSICE_DEFAULT.lat, lng: KOSICE_DEFAULT.lng, accuracy: "default" };
+  cachedLocation = { lat: KOSICE_DEFAULT.lat, lng: KOSICE_DEFAULT.lng, accuracy: "default" };
+  cachedAt = now;
+  return cachedLocation;
 }
 
 // Haversine distance (km)
