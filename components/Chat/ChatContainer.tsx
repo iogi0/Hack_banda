@@ -47,12 +47,10 @@ export function ChatContainer({
   const audioUnlockedRef = useRef(false);
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Mark audio as unlocked only after a real user interaction.
   useEffect(() => {
     const unlockAudio = () => {
       if (audioUnlockedRef.current) return;
       audioUnlockedRef.current = true;
-      console.log("[AUDIO] Unlocked by user interaction");
     };
 
     const events = ["pointerdown", "touchstart", "keydown", "click"];
@@ -72,7 +70,6 @@ export function ChatContainer({
 
     ttsPlayingRef.current = true;
     const text = ttsQueueRef.current.shift()!;
-    console.log("[QUEUE] Speaking:", text.slice(0, 50));
 
     try {
       await speakViaElevenLabs(
@@ -93,7 +90,6 @@ export function ChatContainer({
 
   const enqueueTTS = useCallback((text: string) => {
     if (ttsQueueRef.current.includes(text)) return;
-    console.log("[ENQUEUE] Adding to TTS queue:", text.slice(0, 50));
     ttsQueueRef.current.push(text);
     void processQueue();
   }, [processQueue]);
@@ -101,16 +97,13 @@ export function ChatContainer({
   const mergeIncomingMessages = useCallback(
     (batch: ChatMessage[]) => {
       if (!batch.length) return;
-      console.log("[MSG] Received batch:", batch.length, "messages");
       setMessages((prev) => {
         const next = [...prev];
         for (const m of batch) {
           if (seenRef.current.has(m._id)) continue;
           seenRef.current.add(m._id);
           next.push(m);
-          console.log("[MSG] Checking:", { type: m.message_type, from: m.sender_id, self: selfId, autoRead: autoReadIncomingText });
           if (autoReadIncomingText && m.sender_id !== selfId && m.message_type === "text") {
-            console.log("[MSG] Adding to TTS:", m.message.slice(0, 50));
             safeVibrate(35);
             enqueueTTS(m.message);
           }
@@ -126,7 +119,6 @@ export function ChatContainer({
     [autoReadIncomingText, enqueueTTS, selfId]
   );
 
-  // Initial load.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -152,7 +144,6 @@ export function ChatContainer({
     };
   }, [requestId]);
 
-  // Reliable polling for incoming messages.
   useEffect(() => {
     let stopped = false;
 
@@ -208,21 +199,31 @@ export function ChatContainer({
   const voiceOnlyInput = isCurrentUserRequester && requesterIsBlind;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      {showHeader ? (
-        <header className="card-surface sticky top-0 z-20 flex items-center justify-between gap-2 rounded-[30px] p-3">
-          <div>
-            <p className="text-xs uppercase text-black/50">{t("chat.title")}</p>
-            <p className="text-base font-bold text-black">
-              {partnerName ?? "—"}
-            </p>
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
+      {/* ── Header ── */}
+      {showHeader && (
+        <header className="card-surface sticky top-0 z-20 flex items-center justify-between gap-2 rounded-[24px] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accessible-yellow text-xl font-black text-black shadow-md">
+              {partnerName?.[0]?.toUpperCase() ?? "?"}
+            </div>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--openarm-muted)]">
+                {t("chat.title")}
+              </p>
+              <p className="text-base font-black text-[var(--openarm-text)] leading-tight">
+                {partnerName ?? "—"}
+              </p>
+            </div>
           </div>
           <PhoneCallButton requestId={requestId} />
         </header>
-      ) : null}
+      )}
 
-      <div className="flex-1 overflow-y-auto rounded-[30px] bg-white/40 p-3">
-        {needsAudioTap ? (
+      {/* ── Message list ── */}
+      <div className="scroll-smooth-custom flex-1 rounded-[24px] bg-[var(--openarm-surface)] border border-[var(--openarm-border)] p-3">
+        {/* Audio unlock banner */}
+        {needsAudioTap && (
           <button
             type="button"
             onClick={() => {
@@ -230,21 +231,30 @@ export function ChatContainer({
               setNeedsAudioTap(false);
               void processQueue();
             }}
-            className="mb-3 flex w-full items-center justify-center rounded-[22px] bg-accessible-yellow px-4 py-3 text-center text-sm font-black text-black shadow-[0_12px_28px_rgba(17,17,17,0.14)]"
+            className="mb-3 flex w-full items-center justify-center gap-2 rounded-[18px] bg-accessible-yellow px-4 py-3 text-center text-sm font-black text-black shadow-md"
           >
-            🔊 Tap once to enable voice playback
+            🔊 {t("chat.tapToEnableVoice") ?? "Tap to enable voice playback"}
           </button>
-        ) : null}
+        )}
+
+        {/* Error */}
         {error && (
-          <p className="rounded-2xl bg-red-500/10 p-3 text-sm text-red-700">
-            {error}
-          </p>
+          <div className="mb-3 rounded-[18px] bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 p-3">
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400">{error}</p>
+          </div>
         )}
+
+        {/* Empty state */}
         {!error && messages.length === 0 && (
-          <p className="p-6 text-center text-sm text-black/60">
-            {t("chat.empty")}
-          </p>
+          <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+            <div className="text-5xl opacity-30">💬</div>
+            <p className="text-sm font-semibold text-[var(--openarm-muted)]">
+              {t("chat.empty")}
+            </p>
+          </div>
         )}
+
+        {/* Messages */}
         {messages.map((m) => (
           <MessageBubble
             key={m._id}
@@ -257,6 +267,7 @@ export function ChatContainer({
         <div ref={bottomRef} />
       </div>
 
+      {/* ── Input ── */}
       <MessageInput
         onSend={send}
         isBlind={voiceOnlyInput}
@@ -305,21 +316,17 @@ async function speakViaElevenLabs(
   onReady: () => void
 ): Promise<void> {
   try {
-    console.log("[TTS] Trying ElevenLabs...");
     const res = await fetch("/api/voice/generate-audio", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     });
     if (!res.ok) {
-      console.log("[TTS] ElevenLabs failed:", res.status, "- falling back to browser");
       await speakViaBrowser(text, locale, audioUnlockedRef);
       return;
     }
     const blob = await res.blob();
-    console.log("[TTS] Got blob:", blob.size, "bytes");
     if (!blob.size) {
-      console.log("[TTS] Empty blob - falling back to browser");
       await speakViaBrowser(text, locale, audioUnlockedRef);
       return;
     }
@@ -344,7 +351,6 @@ async function speakViaElevenLabs(
         const notAllowed =
           error instanceof DOMException && error.name === "NotAllowedError";
         if (notAllowed) {
-          console.log("[TTS] Audio blocked, waiting for user interaction");
           onBlocked();
           const unlocked = await waitForUserActivation(audioUnlockedRef);
           if (!unlocked) {
@@ -372,8 +378,7 @@ async function speakViaElevenLabs(
       };
       try {
         await playAudio();
-      } catch (error) {
-        console.error("[TTS] Audio play failed:", error);
+      } catch {
         cleanup();
         void speakViaBrowser(text, locale, audioUnlockedRef).then(() => resolve());
       }
@@ -388,17 +393,10 @@ function speakViaBrowser(
   locale: string,
   audioUnlockedRef: MutableRefObject<boolean>
 ): Promise<void> {
-  if (typeof window === "undefined") {
-    console.log("[TTS] No window object");
-    return Promise.resolve();
-  }
-  if (!("speechSynthesis" in window)) {
-    console.log("[TTS] speechSynthesis not available");
-    return Promise.resolve();
-  }
+  if (typeof window === "undefined") return Promise.resolve();
+  if (!("speechSynthesis" in window)) return Promise.resolve();
 
   try {
-    console.log("[TTS] Using browser speechSynthesis");
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = locale === "uk" ? "uk-UA" : locale === "sk" ? "sk-SK" : "en-US";
@@ -409,24 +407,12 @@ function speakViaBrowser(
         resolve();
         return;
       }
-
-      utterance.onstart = () => console.log("[TTS] Speech started");
-      utterance.onend = () => {
-        console.log("[TTS] Speech ended");
-        resolve();
-      };
-      utterance.onerror = (evt) => {
-        console.error("[TTS] Error:", evt.error);
-        resolve();
-      };
+      utterance.onend = () => resolve();
+      utterance.onerror = () => resolve();
       window.speechSynthesis.speak(utterance);
-      setTimeout(() => {
-        console.log("[TTS] Timeout");
-        resolve();
-      }, 30000);
+      setTimeout(() => resolve(), 30000);
     });
-  } catch (err) {
-    console.error("[TTS] Exception:", err);
+  } catch {
     return Promise.resolve();
   }
 }
@@ -449,8 +435,5 @@ function notifyIncomingCall(message: string) {
 
 function playIncomingTone() {
   if (typeof window === "undefined") return;
-
-  // Skip tone - AudioContext requires user gesture
-  // Just use visual/haptic feedback instead
   safeVibrate([50, 30, 50]);
 }

@@ -5,18 +5,50 @@
 @import "./accessibility.css";
 @import "./animations.css";
 
+/* ── LIGHT MODE TOKENS ── */
 :root {
-  color-scheme: light only;
+  color-scheme: light;
   --openarm-bg: #f6efe1;
   --openarm-surface: rgba(255, 255, 255, 0.92);
   --openarm-surface-strong: #ffffff;
-  --openarm-border: rgba(0, 0, 0, 0.12);
+  --openarm-border: rgba(0, 0, 0, 0.1);
   --openarm-text: #111111;
-  --openarm-muted: #4b5563;
+  --openarm-muted: #5a6475;
   --openarm-yellow: #ffd700;
   --openarm-red: #e60000;
   --openarm-green: #00cc66;
   --openarm-blue: #0066cc;
+  --openarm-shadow: rgba(17, 17, 17, 0.10);
+  --openarm-shadow-strong: rgba(17, 17, 17, 0.18);
+  --openarm-msg-mine-bg: #111111;
+  --openarm-msg-mine-text: #ffffff;
+  --openarm-msg-other-bg: #ffffff;
+  --openarm-msg-other-text: #111111;
+  --openarm-input-bg: rgba(255,255,255,0.85);
+  --openarm-card-hover: rgba(0,0,0,0.03);
+}
+
+/* ── DARK MODE TOKENS ── */
+.dark {
+  color-scheme: dark;
+  --openarm-bg: #0f1117;
+  --openarm-surface: rgba(28, 30, 38, 0.96);
+  --openarm-surface-strong: #1c1e26;
+  --openarm-border: rgba(255, 255, 255, 0.10);
+  --openarm-text: #f0f0f0;
+  --openarm-muted: #9ba3b0;
+  --openarm-yellow: #ffd700;
+  --openarm-red: #ff3333;
+  --openarm-green: #00e673;
+  --openarm-blue: #4d9fff;
+  --openarm-shadow: rgba(0, 0, 0, 0.35);
+  --openarm-shadow-strong: rgba(0, 0, 0, 0.55);
+  --openarm-msg-mine-bg: #ffd700;
+  --openarm-msg-mine-text: #111111;
+  --openarm-msg-other-bg: #2a2d38;
+  --openarm-msg-other-text: #f0f0f0;
+  --openarm-input-bg: rgba(40,42,54,0.92);
+  --openarm-card-hover: rgba(255,255,255,0.04);
 }
 
 html {
@@ -26,6 +58,14 @@ html {
   background:
     radial-gradient(circle at top left, rgba(255, 215, 0, 0.18), transparent 28%),
     linear-gradient(180deg, #fff8e6 0%, #f4efe8 55%, #eef6f1 100%);
+  transition: background 0.3s ease;
+}
+
+.dark html,
+html.dark {
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 0, 0.06), transparent 30%),
+    linear-gradient(180deg, #0f1117 0%, #111420 60%, #101510 100%);
 }
 
 body {
@@ -41,6 +81,7 @@ body {
     sans-serif;
   background: transparent;
   accent-color: var(--openarm-yellow);
+  transition: color 0.2s ease;
 }
 
 * {
@@ -60,34 +101,52 @@ select {
   color-scheme: light;
 }
 
+.dark button,
+.dark input,
+.dark textarea,
+.dark select {
+  color-scheme: dark;
+}
+
 input,
 textarea,
 select {
   width: 100%;
-  border: 2px solid rgba(17, 17, 17, 0.16);
+  border: 2px solid var(--openarm-border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--openarm-input-bg);
   color: var(--openarm-text);
   padding: 0.95rem 1rem;
   appearance: none;
   -webkit-appearance: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--openarm-yellow);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(17, 17, 17, 0.42);
+  color: var(--openarm-muted);
+  opacity: 0.7;
 }
 
 main {
   min-height: 100svh;
 }
 
+/* ── MAP ── */
 .leaflet-container {
   height: 100%;
   width: 100%;
   border-radius: 24px;
-  border: 2px solid rgba(17, 17, 17, 0.08);
-  box-shadow: 0 20px 45px rgba(17, 17, 17, 0.12);
+  border: 2px solid var(--openarm-border);
+  box-shadow: 0 20px 45px var(--openarm-shadow);
 }
 
 .leaflet-top,
@@ -95,13 +154,17 @@ main {
   z-index: 400 !important;
 }
 
+/* ── CARD SURFACE ── */
 .card-surface {
   border: 1px solid var(--openarm-border);
   background: var(--openarm-surface);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 16px 40px rgba(17, 17, 17, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 16px 40px var(--openarm-shadow);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
+/* ── LAYOUT ── */
 .app-screen {
   width: 100%;
   max-width: 480px;
@@ -110,4 +173,158 @@ main {
 
 .pt-safe-top {
   padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+/* ── MODERN BUTTON VARIANTS ── */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 1.5rem;
+  border-radius: 20px;
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: #111;
+  background: var(--openarm-yellow);
+  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.25);
+}
+
+.btn-danger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 1.5rem;
+  border-radius: 20px;
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: white;
+  background: var(--openarm-red);
+  box-shadow: 0 8px 24px rgba(230, 0, 0, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-danger:active {
+  transform: scale(0.97);
+}
+
+/* ── STATUS BADGES ── */
+.badge-pending {
+  background: rgba(255, 215, 0, 0.2);
+  color: #8a6800;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+.dark .badge-pending {
+  background: rgba(255, 215, 0, 0.15);
+  color: #ffd700;
+  border-color: rgba(255, 215, 0, 0.25);
+}
+
+.badge-active {
+  background: rgba(0, 204, 102, 0.15);
+  color: #006633;
+  border: 1px solid rgba(0, 204, 102, 0.3);
+}
+
+.dark .badge-active {
+  background: rgba(0, 230, 115, 0.15);
+  color: #00e673;
+  border-color: rgba(0, 230, 115, 0.25);
+}
+
+/* ── URGENCY COLORS ── */
+.urgency-low    { --urgency-color: #22c55e; }
+.urgency-medium { --urgency-color: #eab308; }
+.urgency-high   { --urgency-color: #f97316; }
+.urgency-critical { --urgency-color: #e60000; }
+
+/* ── CHAT BUBBLES ── */
+.bubble-mine {
+  background: var(--openarm-msg-mine-bg);
+  color: var(--openarm-msg-mine-text);
+  border-radius: 22px 22px 6px 22px;
+}
+
+.bubble-other {
+  background: var(--openarm-msg-other-bg);
+  color: var(--openarm-msg-other-text);
+  border-radius: 22px 22px 22px 6px;
+  box-shadow: 0 2px 8px var(--openarm-shadow);
+}
+
+/* ── SMOOTH SCROLL ── */
+.scroll-smooth-custom {
+  scroll-behavior: smooth;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── TYPING INDICATOR ── */
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+.typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── STATUS INDICATOR PULSE ── */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-pulse {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+/* ── REQUEST CARD HOVER ── */
+.request-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.request-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px var(--openarm-shadow-strong);
+  background: var(--openarm-card-hover);
+}
+
+/* ── FORM STYLES ── */
+.form-group {
+  position: relative;
+}
+
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--openarm-muted);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+/* ── DARK MODE BACKGROUND (applied via .dark on html) ── */
+.dark body {
+  background: transparent;
+}
+
+html.dark {
+  background:
+    radial-gradient(circle at top left, rgba(255, 215, 0, 0.06), transparent 30%),
+    linear-gradient(180deg, #0f1117 0%, #111420 60%, #101510 100%);
 }

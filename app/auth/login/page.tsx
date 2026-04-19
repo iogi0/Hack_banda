@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const submit = () => {
@@ -42,45 +43,105 @@ export default function LoginPage() {
     });
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") submit();
+  };
+
   return (
     <MobileLayout appShell className="justify-between overflow-hidden">
       <TopSafeArea />
+
+      {/* Back button */}
       <Link
         href={localizePath(DEFAULT_LOCALE, "/")}
-        className="inline-flex min-h-[48px] items-center rounded-full bg-black/6 px-4 text-sm font-bold text-black transition hover:bg-black/10"
+        className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-black/6 dark:bg-white/8 px-4 text-sm font-bold text-[var(--openarm-text)] transition hover:bg-black/10 dark:hover:bg-white/12"
       >
         ← {t("common.back")}
       </Link>
-      <section className="rounded-[36px] bg-black px-5 py-6 text-white shadow-[0_24px_60px_rgba(17,17,17,0.22)]">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-white/70">OpenArm</p>
-        <h1 className="mt-3 text-[2.15rem] font-black leading-none">{t("auth.loginTitle")}</h1>
-        <p className="mt-3 max-w-[24rem] text-sm leading-6 text-white/78">{t("auth.loginSubtitle")}</p>
+
+      {/* Hero section */}
+      <section className="relative overflow-hidden rounded-[36px] bg-gradient-to-br from-gray-900 via-black to-gray-800 px-6 py-7 text-white shadow-[0_24px_60px_rgba(17,17,17,0.30)]">
+        {/* Decorative gradient */}
+        <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full bg-accessible-yellow/20 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-4 -left-4 h-24 w-24 rounded-full bg-accessible-blue/15 blur-xl" />
+
+        <div className="relative">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="text-2xl">🤝</span>
+            <span className="text-sm font-bold uppercase tracking-widest text-white/60">OpenArm</span>
+          </div>
+          <h1 className="text-[2rem] font-black leading-tight">{t("auth.loginTitle")}</h1>
+          <p className="mt-2 text-sm leading-relaxed text-white/70">{t("auth.loginSubtitle")}</p>
+        </div>
       </section>
 
+      {/* Form card */}
       <section className="card-surface rounded-[32px] p-5">
         <div className="grid gap-3">
-          <input
-            type="email"
-            placeholder={t("common.email")}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-          <input
-            type="password"
-            placeholder={t("common.password")}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          {error ? <p className="text-sm font-semibold text-accessible-red">{error}</p> : null}
-          <AccessibleButton onClick={submit} disabled={pending} className="w-full">
-            {pending ? t("auth.loginLoading") : t("common.login")}
+          {/* Email */}
+          <div className="flex flex-col gap-1">
+            <label className="form-label">{t("common.email")}</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--openarm-muted)] text-base">✉️</span>
+              <input
+                type="email"
+                placeholder={t("common.email")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-10"
+                autoComplete="email"
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div className="flex flex-col gap-1">
+            <label className="form-label">{t("common.password")}</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--openarm-muted)] text-base">🔑</span>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder={t("common.password")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pl-10 pr-12"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-[10px] text-sm text-[var(--openarm-muted)] hover:bg-black/8 dark:hover:bg-white/8 transition"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="rounded-[16px] bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 px-4 py-3">
+              <p className="text-sm font-semibold text-red-700 dark:text-red-400">⚠️ {error}</p>
+            </div>
+          )}
+
+          {/* Submit */}
+          <AccessibleButton
+            onClick={submit}
+            disabled={pending}
+            className="w-full"
+          >
+            {pending ? "⏳ " + t("auth.loginLoading") : t("common.login")}
           </AccessibleButton>
         </div>
       </section>
 
-      <p className="pb-2 text-center text-sm text-black/70">
+      {/* Footer */}
+      <p className="pb-2 text-center text-sm text-[var(--openarm-muted)]">
         {t("auth.noAccount")}{" "}
-        <Link href={href("/auth/register")} className="font-bold underline">
+        <Link href={href("/auth/register")} className="font-bold text-[var(--openarm-text)] underline underline-offset-2">
           {t("common.signup")}
         </Link>
       </p>

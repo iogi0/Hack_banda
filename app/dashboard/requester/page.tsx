@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { RequesterBottomSheet } from "@/components/Requester/RequesterBottomSheet";
 import { BurgerMenu } from "@/components/Common/BurgerMenu";
+import { DarkModeToggle } from "@/components/Common/DarkModeToggle";
 import { getUserLocation } from "@/lib/geolocation";
 import { KOSICE_DEFAULT } from "@/lib/constants";
 import { useTranslation } from "@/lib/i18n/useTranslation";
@@ -14,8 +15,11 @@ import type { HelpRequestDTO, HelperPresenceDTO, PublicUser, SafeNodeDTO } from 
 const RequesterMap = dynamic(() => import("@/components/Map/RequesterMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-white/50">
-      <span className="text-black/50">Завантажую мапу…</span>
+    <div className="flex h-full w-full items-center justify-center bg-[var(--openarm-surface)]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-accessible-yellow border-t-transparent" />
+        <span className="text-sm font-semibold text-[var(--openarm-muted)]">Завантажую мапу…</span>
+      </div>
     </div>
   ),
 });
@@ -74,7 +78,6 @@ export default function RequesterDashboardPage() {
     [href, router]
   );
 
-  // Boot: get GPS + first load
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -91,7 +94,6 @@ export default function RequesterDashboardPage() {
     return () => { cancelled = true; };
   }, [loadDashboard, t]);
 
-  // Poll every 5s
   useEffect(() => {
     const id = setInterval(() => void loadDashboard(coords.lat, coords.lng), 5000);
     return () => clearInterval(id);
@@ -104,7 +106,6 @@ export default function RequesterDashboardPage() {
   const isBlindRequester =
     Boolean(me?.is_blind) || /(blind|сліп|незр|nevid)/.test(requesterNotes);
 
-  // Автоматичний редирект на чат для сліпої людини коли запит прийнято
   useEffect(() => {
     if (activeRequest?.status === "in_progress" && isBlindRequester && me?.is_blind) {
       router.push(href(`/chat/${activeRequest._id}`));
@@ -130,29 +131,34 @@ export default function RequesterDashboardPage() {
   };
 
   const sheetH = sheetExpanded ? "h-[80dvh]" : "h-[30dvh] min-h-[230px]";
-
   const topBarHeight = 92;
   const bottomOffset = sheetExpanded ? "80dvh" : "30dvh";
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden">
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-[var(--openarm-bg)]">
       {/* ── TOP BAR ── */}
       <div className="absolute left-0 right-0 top-0 z-[50] px-4 pb-3 pt-safe-top">
-        <div className="flex items-center gap-3 rounded-[28px] bg-white/92 px-3 py-3 shadow-[0_18px_40px_rgba(17,17,17,0.16)] backdrop-blur">
-          <div className="flex flex-1 items-center gap-3">
+        <div className="flex items-center gap-2.5 rounded-[26px] bg-[var(--openarm-surface)] px-3 py-2.5 shadow-[0_16px_36px_var(--openarm-shadow-strong)] backdrop-blur-xl border border-[var(--openarm-border)]">
+          {/* Left: Burger */}
+          <div className="flex flex-1 items-center gap-2">
             <BurgerMenu />
           </div>
+
+          {/* Center: Location */}
           <div className="flex-1 text-center">
-            <span className="inline-flex max-w-full whitespace-nowrap rounded-full bg-black/10 px-4 py-2 text-xs font-bold text-black shadow sm:text-sm">
+            <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-full bg-black/8 dark:bg-white/8 px-3 py-1.5 text-xs font-bold text-[var(--openarm-text)] shadow-sm">
               📍 {locationLabel}
             </span>
           </div>
-          <div className="flex flex-1 justify-end">
+
+          {/* Right: Karma + Dark mode */}
+          <div className="flex flex-1 items-center justify-end gap-2">
             {me && (
-              <span className="rounded-full bg-accessible-yellow px-3 py-2 text-xs font-bold text-black shadow">
+              <span className="rounded-full bg-accessible-yellow px-3 py-1.5 text-xs font-black text-black shadow-sm">
                 ⭐ {me.karma_points}
               </span>
             )}
+            <DarkModeToggle />
           </div>
         </div>
       </div>
@@ -182,7 +188,7 @@ export default function RequesterDashboardPage() {
           aria-label={sheetExpanded ? t("common.close") : t("common.menu")}
           onClick={() => setSheetExpanded((p) => !p)}
         >
-          <div className="h-1.5 w-12 rounded-full bg-black/20" />
+          <div className="h-1.5 w-10 rounded-full bg-[var(--openarm-muted)]/30" />
         </button>
 
         <RequesterBottomSheet
